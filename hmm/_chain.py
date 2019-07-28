@@ -1,6 +1,6 @@
 import numpy as np
 
-from _base import HMM, Memoize
+from _base import HMM
 
 class Chain(HMM):
     """
@@ -10,7 +10,7 @@ class Chain(HMM):
     psi = smoothness term
     """
 
-    def __init__(self, length, phi, psi, possible_values=[-1, 1]):
+    def __init__(self, length, phi, psi, possible_values=[0, 1]):
 
          self._len = length
          self._phi = phi
@@ -19,12 +19,16 @@ class Chain(HMM):
 
          self._observed = None
 
+    def _unit_msg(self):
+        unit_msg = dict((k, 1) for k in self._possible_values)
+        return self._normalize_msg(unit_msg)
+
     def _update_observed(self, observed):
         self._observed = observed
 
     def _forward_pass(self, method):
         messages = {}
-        msg_left = lambda x_1: 1 # no information traveling left to x1
+        msg_left = self._unit_msg() # no information traveling left to x1
 
         for i in range(1, self._len):
             y_left = self._observed[i - 1]
@@ -36,7 +40,7 @@ class Chain(HMM):
 
     def _backward_pass(self, method):
         messages = {}
-        msg_right = lambda x_n: 1 # no information traveling right to x_n
+        msg_right = self._unit_msg() # no information traveling right to x_n
 
         for i in range(self._len, 1, -1):
             y_right = self._observed[i - 1]
@@ -53,26 +57,33 @@ class Chain(HMM):
         }[method]
 
         msg_next = lambda x_i: agg_func([
-            self._phi(x_before, y_before) * self._psi(x_before, x_i) * msg_before(x_before)
+            self._phi(x_before, y_before) * self._psi(x_before, x_i) * msg_before[x_before]
             for x_before in self._possible_values
         ])
 
-        return Memoize(msg_next)
+        msg_next = dict((k, msg_next(k)) for k in self._possible_values)
+        return self._normalize_msg(msg_next)
 
     def _get_beliefs(self, method):
+        unit_msg = self._unit_msg()
+
         forward_msgs = self._forward_pass(method)
         backward_msgs = self._backward_pass(method)
 
         beliefs = {}
-        for i in range(self._len):
-            y_i = self._observed[i]
-            msg_left = forward_msgs.get((i , i + 1), lambda x_i: 1)
-            msg_right = backward_msgs.get((i + 2 , i + 1), lambda x_i: 1)
+        for i in range(1, self._len + 1):
 
-            belief_func = lambda x_i: self._phi(x_i, y_i) * msg_left(x_i) * msg_right(x_i)
+            y_i = self._observed[i - 1]
+            msg_left = forward_msgs.get((i - 1 , i), unit_msg)
+            msg_right = backward_msgs.get((i + 1 , i), unit_msg)
+
+            belief_func = lambda x_i: self._phi(x_i, y_i) * msg_left[x_i] * msg_right[x_i]
             z_norm = sum([belief_func(v) for v in self._possible_values])
 
-            beliefs[i + 1] = [(1 / z_norm) * belief_func(x_i) for x_i in self._possible_values]
+            beliefs[i] = [(1 / z_norm) * belief_func(x_i) for x_i in self._possible_values]
+
+            if abs(beliefs[i][0] - 1 / len(self._possible_values)) < 0.01: ### DEBUG
+                print("WARNING: May cause numerical issue for MAP!")
 
         return beliefs
 
