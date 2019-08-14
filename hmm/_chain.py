@@ -82,7 +82,7 @@ class Chain(HMM):
 
             beliefs[i] = [(1 / z_norm) * belief_func(x_i) for x_i in self._possible_values]
 
-            if abs(beliefs[i][0] - 1 / len(self._possible_values)) < 0.01: ### DEBUG
+            if abs(beliefs[i][0] - 1 / len(self._possible_values)) < 0.001: ### DEBUG
                 print("WARNING: May cause numerical issue for MAP!")
 
         return beliefs
