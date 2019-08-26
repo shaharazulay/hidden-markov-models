@@ -93,3 +93,11 @@ class Chain(HMM):
     def _get_max_apostriori_beliefs(self):
         beliefs = self._get_beliefs(method='max_product')
         return [self._possible_values[np.argmax(b)] for k, b in beliefs.items()]
+        
+
+def f_phi(x, y_observed, b=[-0.32, 0.4]):
+    return np.round(exp(b[y_observed] * (x - 0.5)), 2)
+    
+def f_psi(xi, xj, j=1):
+    j = 1
+    return np.round(exp(j * (xi - 0.5) * (xj - 0.5)), 2)
