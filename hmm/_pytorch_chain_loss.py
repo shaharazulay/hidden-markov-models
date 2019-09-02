@@ -2,13 +2,15 @@ import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torch.optim as optim
+import numpy as np
+
 
 def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len, train=True):
     batch_size = labels.size()[0]
     
     loss = 0
     
-    labels_out = []
+    labels_out = torch.Tensor()
     for b_idx in range(batch_size):
 
         values = torch.Tensor([0, 1]) - 0.5
@@ -71,7 +73,7 @@ def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len,
         beliefs_softmax = torch.softmax(beliefs_norm, dim=0)
         loss += F.binary_cross_entropy(beliefs_softmax[1, :].float(), labels[b_idx]) ###
         
-        labels_out.append(beliefs_norm[1, :] > 0.5)
+        labels_out = torch.cat((labels_out, (beliefs_norm[1, :] > 0.5).float().view(1, -1)), dim=0)
         
     loss = torch.div(loss, batch_size)
     
