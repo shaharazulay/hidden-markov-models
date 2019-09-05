@@ -23,8 +23,8 @@ def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len,
         # forward pass    
         for i in range(0, chain_len - 1):
             
-            phi = torch.exp(torch.mul(b[b_idx][int(observations[b_idx][i])], values))
-            psi = torch.exp(torch.mul(j[b_idx], pairs))
+            phi = torch.exp(torch.mul(b[int(observations[b_idx][i])], values))
+            psi = torch.exp(torch.mul(j, pairs))
   
             step1 = torch.mul(phi, msg_left.t())
             step2 = torch.mul(step1, psi)
@@ -44,8 +44,8 @@ def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len,
         # backward pass    
         for i in range(chain_len - 1, 0, -1):
 
-            phi = torch.exp(torch.mul(b[b_idx][int(observations[b_idx][i])], values))
-            psi = torch.exp(torch.mul(j[b_idx], pairs))
+            phi = torch.exp(torch.mul(b[int(observations[b_idx][i])], values))
+            psi = torch.exp(torch.mul(j, pairs))
             step1 = torch.mul(phi, msg_right.t())
             step2 = torch.mul(step1, psi)
             step3, _ = torch.max(step2, dim=1)
@@ -62,7 +62,7 @@ def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len,
         # add data term
         data_term = torch.Tensor()
         for i in range(0, chain_len):
-            phi = torch.exp(torch.mul(b[b_idx][int(observations[b_idx][i])], values))
+            phi = torch.exp(torch.mul(b[int(observations[b_idx][i])], values))
             data_term = torch.cat((data_term, phi.view(-1, 1)), dim=1)
         
         # calculate beliefs
@@ -70,7 +70,7 @@ def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len,
         norm_ = torch.norm(beliefs, p=1, dim=0)  # L1 norm
         beliefs_norm = torch.div(beliefs, norm_)
         
-        beliefs_softmax = torch.softmax(beliefs_norm, dim=0)
+        beliefs_softmax = torch.softmax(beliefs_norm , dim=0)
         loss += F.binary_cross_entropy(beliefs_softmax[1, :].float(), labels[b_idx]) ###
         
         labels_out = torch.cat((labels_out, (beliefs_norm[1, :] > 0.5).float().view(1, -1)), dim=0)
