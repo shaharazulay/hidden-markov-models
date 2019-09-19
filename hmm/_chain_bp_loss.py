@@ -81,3 +81,17 @@ def belief_propagation_cross_entropy_loss(j, b, observations, labels, chain_len,
         return loss
     else:
         return labels_out
+        
+
+def binary_hinge_loss(beliefs_softmax, labels, delta=0.25):
+    """
+    Hinge loss
+    loss = max(0, delta - y * f(x))
+    """
+    zero = torch.Tensor([0])
+    beliefs_margin = beliefs_softmax[1, :] - 0.5
+    labels_sign = (labels - 0.5) * 2   # turn 0, 1 to -1, 1
+    
+    hinge = torch.max(zero, delta - torch.mul(beliefs_margin, labels_sign))
+    return torch.sum(hinge)
+    
