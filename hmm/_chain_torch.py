@@ -19,7 +19,7 @@ class Chain(torch.nn.Module):
 
             values = torch.Tensor([0, 1]) - 0.5
             pairs = torch.mul(values.view(-1, 2).t(), values)
-            unit_msg = torch.ones([2, 1]) / 2
+            unit_msg = torch.ones([2, 1])
             
             forward_messages = unit_msg
             msg_left = unit_msg # no information traveling left to x1
@@ -36,7 +36,7 @@ class Chain(torch.nn.Module):
 
                 msg = step3.view(-1 ,1)
                 norm_ = torch.norm(msg, p=1, dim=0)  # L1 norm
-                msg = torch.div(msg, norm_)
+                #msg = torch.div(msg, norm_)
                 
                 forward_messages = torch.cat((forward_messages, msg), dim=1)    
                 msg_left = msg
@@ -56,7 +56,7 @@ class Chain(torch.nn.Module):
 
                 msg = step3.view(-1 ,1)
                 norm_ = torch.norm(msg, p=1, dim=0)  # L1 norm
-                msg = torch.div(msg, norm_)
+                #msg = torch.div(msg, norm_)
                 
                 backward_messages = torch.cat((msg, backward_messages), dim=1)    
                 msg_right = msg
@@ -71,10 +71,10 @@ class Chain(torch.nn.Module):
             
             # calculate beliefs
             beliefs = torch.mul(data_term, messages)
-            norm_ = torch.norm(beliefs, p=1, dim=0)  # L1 norm
-            beliefs_norm = torch.div(beliefs, norm_)
+            #norm_ = torch.norm(beliefs, p=1, dim=0)  # L1 norm
+            #beliefs_norm = torch.div(beliefs, norm_)
             
-            beliefs_pred = torch.cat((beliefs_pred, beliefs_norm[1, :].view(1, -1)), dim=0)
+            beliefs_pred = torch.cat((beliefs_pred, beliefs.expand(1, 2, -1)), dim=0)
         
         return beliefs_pred
     
