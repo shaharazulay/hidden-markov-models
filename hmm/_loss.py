@@ -1,8 +1,4 @@
 import torch
-import torch.nn.functional as F
-from torch.autograd import Variable
-import torch.optim as optim
-import numpy as np
 
 
 class HingeLoss(torch.nn.Module):
@@ -17,7 +13,7 @@ class HingeLoss(torch.nn.Module):
         batch_size = labels.size()[0]
         
         zero = torch.Tensor([0])
-        beliefs_margin = (beliefs - 0.5) * 2
+        beliefs_margin = (beliefs[:, 1, :] - beliefs[:, 0, :])
         labels_sign = (labels - 0.5) * 2   # turn 0, 1 to -1, 1
         
         loss = torch.max(zero, self._margin - torch.mul(beliefs_margin, labels_sign))
