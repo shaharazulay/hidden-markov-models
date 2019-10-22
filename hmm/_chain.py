@@ -97,10 +97,10 @@ class Chain(HMM):
 
 def f_phi(b=[-0.32, 0.4]):
     def phi(x, y_observed):
-        return np.round(np.exp(b[y_observed] * (x - 0.5)), 2)
+        return np.round(np.exp(b[y_observed] * (x - 0.5)), 3)
     return phi
     
 def f_psi(j=1):
     def psi(xi, xj):
-        return np.round(np.exp(j * (xi - 0.5) * (xj - 0.5)), 2)
+        return np.round(np.exp(j * (xi - 0.5) * (xj - 0.5)), 3)
     return psi
